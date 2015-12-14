@@ -1,0 +1,21 @@
+{
+  "name": "broplayer",
+  "version": "0.0.1",
+  "main": [
+    "bro-player.html"
+  ],
+  "license": "https://github.com/BroPhil/broplayer/blob/master/LICENSE",
+  "authors": [
+    "Philip Ullmann"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BroPhil/broplayer.git"
+  },
+  "dependencies": {
+    "polymer": "^1.1.0",
+    "paper-slider": "PolymerElements/paper-slider#^1.0.8",
+    "jquery": "^1.11.3"
+  },
+  "private": true
+}
