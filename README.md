@@ -15,9 +15,9 @@ Markup for the document in which you are using BroPlayer:
 <!doctype html>
 <html>
 <head>
-    <script src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
-    <script type="text/javascript" src="bower_components/jquery/dist/jquery.min.js"></script>
-    <link rel="import" href="bower_components/paper-slider/paper-slider.html">
+    <script type="text/javascript" src="../webcomponentsjs/webcomponents-lite.min.js"></script>
+    <script type="text/javascript" src="../jquery/dist/jquery.min.js"></script>
+    <link rel="import" href="../paper-slider/paper-slider.html">
     <link rel="import" href="bro-player.html">
 </head>
 <body>
@@ -49,7 +49,7 @@ This creates a Video Element with Controls, with a width of 1280px and a height 
 ```
 
 ## Hiding Controls
-The HTML5 video element is only able to display controls or not. But you can't enable/disable only parts of the controls (eg. volumebar, seekbar, playbutton). This is what makes BroPlayer special. In Default, controls are enabled. But you are able to disable every single control easily via an attribute:
+The HTML5 video element is only able to display controls or not. But you can't enable/disable only parts of the controls (eg. volumebar, seekbar, playbutton). This is what makes BroPlayer special. By Default, controls are enabled. But you are able to disable every single control easily via an attribute:
 ```html
   <bro-player width="1280" height="720" src="video.mp4" hide-progressbar></bro-player>
 ```
@@ -58,12 +58,12 @@ Here is a list of possible hiding properties:
 
 Attribute | Description
 ------------ | -------------
-hide-progressbar | Hide the Progressbar
-hide-time | Hiding the Time
-hide-playpause | Hiding the Play/Pause-Button
-hide-volume | Hiding the Volumebar
-hide-mute | Hiding the Mute-Button
-hide-fullscreen | Hiding the Fullscreen-Button
+hide-progressbar | Hide the progressbar
+hide-time | Hiding the time
+hide-playpause | Hiding the play/pause-button
+hide-volume | Hiding the volumebar
+hide-mute | Hiding the mute button
+hide-fullscreen | Hiding the fullscreen button
 
 #### Allowing Contextmenu
 By Befault, the right-click on the player is prevented. But you are able to enable the context menu:
@@ -81,8 +81,8 @@ Here is a list of styling-attributes:
 
 Attribute | Default | Description
 ------------ | ------------- | -------------
-background-color | #000000 | The Background-Color of the Controls
-background-opacity | 0.7 | The Opacity of the Controls-Background
-foreground-color | #FFFFFF | The ForegroundColor of the Controls
-progress-color | #3367D6 | The color of the video progress.
-buffer-color | #7BAAF7 | The color of the loaded buffer progress.
+background-color | #000000 | The background color of the controls
+background-opacity | 0.7 | The opacity of the controls background
+foreground-color | #FFFFFF | The foreground color of the controls
+progress-color | #3367D6 | The color of the video progress
+buffer-color | #7BAAF7 | The color of the loaded buffer progres
