@@ -71,6 +71,10 @@ By Befault, the right-click on the player is prevented. But you are able to enab
   <bro-player width="1280" height="720" src="video.mp4" allow-contextmenu></bro-player>
 ```
 
+Attribute | Description
+------------ | -------------
+allow-contextmenu | Allowing right-click contextMenu on the video
+
 ## Styling
 You are also able to style BroPlayer.
 ```html
@@ -85,4 +89,15 @@ background-color | #000000 | The background color of the controls
 background-opacity | 0.7 | The opacity of the controls background
 foreground-color | #FFFFFF | The foreground color of the controls
 progress-color | #3367D6 | The color of the video progress
-buffer-color | #7BAAF7 | The color of the loaded buffer progres
+buffer-color | #7BAAF7 | The color of the loaded buffer progress
+
+## Errors
+The default HTML5 video tag does not show an error if the video source can't be played. It only shows an error message, if the browser doesn't support the video tag. BroPlayer displays an error if none of the sources can be played. You can set this error message on your own in your own language if you want:
+
+```html
+  <bro-player width="1280" height="720" src="video.mp4" no-video="Video konnte nicht geladen werden"></bro-player>
+```
+
+Attribute | Default | Description
+------------ | ------------- | -------------
+no-video | "Cannot open source" | The error message which will be displayed when the player can't play any source.
