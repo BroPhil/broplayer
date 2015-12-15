@@ -1,8 +1,8 @@
 # BroPlayer
-Polymer WebComponent, Extension of HTML5 Video
+Polymer WebComponent, extending HTML5 Video
 
-BroPlayer is an extension of the HTML5 <video> element. 
-You are able to disable some parts of the controls, while <video> only lets you disable the controls as once.
+BroPlayer is based on the HTML5 video element. 
+You can disable some parts of the controls, while HTML5-video only lets you disable the controls as once.
 
 You can easily get BroPlayer with bower:
 ```sh
