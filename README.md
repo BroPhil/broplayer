@@ -11,7 +11,6 @@ $ bower install BroPhil/broplayer
 
 ## Document Markup
 Markup for the document in which you are using BroPlayer:
-(Path of example: bower_components/broplayer/ )
 ```html
 <!doctype html>
 <html>
@@ -26,6 +25,7 @@ Markup for the document in which you are using BroPlayer:
 </body>
 </html>
 ```
+Path of example: bower_components/broplayer/ 
 
 ## Getting Started
 
