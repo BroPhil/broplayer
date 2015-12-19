@@ -11,13 +11,14 @@ $ bower install BroPhil/broplayer
 
 ## Document Markup
 Markup for the document in which you are using BroPlayer:
+(Path of example: bower_components/broplayer/ )
 ```html
 <!doctype html>
 <html>
 <head>
     <script type="text/javascript" src="../webcomponentsjs/webcomponents-lite.min.js"></script>
     <script type="text/javascript" src="../jquery/dist/jquery.min.js"></script>
-    <link rel="import" href="../paper-slider/paper-slider.html">
+    <script type="text/javascript" src="../velocity/velocity.min.js"></script>
     <link rel="import" href="bro-player.html">
 </head>
 <body>
