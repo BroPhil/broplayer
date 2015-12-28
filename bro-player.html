@@ -1,3 +1,7 @@
+<script>
+    window.Polymer = window.Polymer || {};
+    window.Polymer.dom = 'shadow';
+</script>
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../paper-slider/paper-slider.html">
 
@@ -266,8 +270,8 @@
         </style>
         <div class="bro-player-container">
             <video id="bro-player-video">
-                <content></content>
             </video>
+            <content></content>
             <ul class="bro-player-errors">
 
             </ul>
@@ -472,6 +476,34 @@
             isFullScreen: function(){
                 return (document.webkitIsFullScreen || document.mozFullScreen || document.fullScreen || document.msFullScreen);
             },
+            updateTime: function(){
+                var proto = this;
+                var duration = proto.video.duration;
+                var currentTime = proto.video.currentTime;
+
+                var seconds = 0,
+                        minutes = Math.floor(currentTime / 60),
+                        tminutes = Math.floor(duration / 60),
+                        tseconds = Math.round((duration) - (tminutes*60));
+
+                if(currentTime) {
+                    seconds = Math.round(currentTime) - (60*minutes);
+                    if(seconds > 59) {
+                        seconds = Math.round(currentTime) - (60*minutes);
+                        if(seconds == 60) {
+                            minutes = Math.round(currentTime / 60);
+                            seconds = 0;
+                        }
+                    }
+                }
+                if(seconds < 10) { seconds = '0'+seconds; }
+                if(tseconds < 10) { tseconds = '0'+tseconds; }
+
+                if(!proto.hideTime) {
+                    $(proto.player).find('.bro-player-ctime').html(minutes + ':' + seconds);
+                    $(proto.player).find('.bro-player-ttime').html(tminutes + ':' + tseconds);
+                }
+            },
             addError: function(src){
                 var li = $("<li></li>");
                 li.text(this.noVideo+": "+src);
@@ -479,6 +511,7 @@
             },
             attached: function() {
                 this.initVariables();
+                this.initSources();
                 this.initProperties();
                 this.initSections();
                 this.initControls();
@@ -499,6 +532,25 @@
                 this.variables.progWidth = 0;
 
             },
+            initSources: function(){
+                var proto = this;
+
+                // Shadow Dom
+                if(proto.shadowRoot != null) {
+                    var content = proto.shadowRoot.querySelector('content').getDistributedNodes();
+                    for (var i = 0; i < content.length; i++) {
+                        if ($(content[i]).is("source")) {
+                            $(proto.video).append($(content[i]).clone());
+                        }
+                    }
+                } // Shady Dom
+                else {
+                    var content = $(proto.player).find("source");
+                    content.each(function(){
+                        $(proto.video).append(this);
+                    });
+                }
+            },
             initProperties: function(){
                 if(this.src.length > 0){
                     $(this.video).attr("src",this.src);
@@ -510,6 +562,8 @@
                 this.style.height = height;
                 $(this.video).attr("width",width);
                 $(this.video).attr("height",height);
+
+
 
                 this.video.autoplay = this.autoplay;
                 if(this.autoplay){
@@ -584,6 +638,7 @@
                     proto.video.style.display = "block";
                     proto.errors.style.display = "none";
                     proto.controls.container.style.display = "block";
+                    proto.updateTime();
                 });
 
                 $(proto.video).on('error',function(){
@@ -624,31 +679,7 @@
                         proto.controls.progress.value = proto.video.currentTime;
                     }
 
-                    var duration = proto.video.duration;
-                    var currentTime = proto.video.currentTime;
-
-                    var seconds = 0,
-                            minutes = Math.floor(currentTime / 60),
-                            tminutes = Math.floor(duration / 60),
-                            tseconds = Math.round((duration) - (tminutes*60));
-
-                    if(currentTime) {
-                        seconds = Math.round(currentTime) - (60*minutes);
-                        if(seconds > 59) {
-                            seconds = Math.round(currentTime) - (60*minutes);
-                            if(seconds == 60) {
-                                minutes = Math.round(currentTime / 60);
-                                seconds = 0;
-                            }
-                        }
-                    }
-                    if(seconds < 10) { seconds = '0'+seconds; }
-                    if(tseconds < 10) { tseconds = '0'+tseconds; }
-
-                    if(!proto.hideTime) {
-                        $(proto.player).find('.bro-player-ctime').html(minutes + ':' + seconds);
-                        $(proto.player).find('.bro-player-ttime').html(tminutes + ':' + tseconds);
-                    }
+                    proto.updateTime();
 
                     if(proto.video.currentTime > 0 && proto.video.paused == false && proto.video.ended == false) {
                         proto.bufferLength();
