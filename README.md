@@ -15,7 +15,7 @@ Markup for the document in which you are using BroPlayer:
 <!doctype html>
 <html>
 <head>
-    <script type="text/javascript" src="bower_components/webcomponentsjs/webcomponents-lite.min.js"></script>
+    <script type="text/javascript" src="bower_components/webcomponentsjs/webcomponents-lite.js"></script>
     <link rel="import" href="bower_components/broplayer/bro-player.min.html">
 </head>
 <body>
