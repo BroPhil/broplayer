@@ -2,7 +2,7 @@
   "name": "broplayer",
   "title": "BroPLayer",
   "description": "Polymer WebComponent, Extension of HTML5 Video",
-  "version": "0.0.1",
+  "version": "2.0.0-beta",
   "main": "bro-player.html",
   "homepage": "http://broplayer.com",
   "author": {
