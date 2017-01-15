@@ -6,7 +6,7 @@ You can disable some parts of the controls, while HTML5-video only lets you disa
 
 You can easily get BroPlayer with bower:
 ```sh
-$ bower install BroPhil/broplayer
+$ bower install --save BroPhil/broplayer#2.0-beta
 ```
 
 ## Document Markup
