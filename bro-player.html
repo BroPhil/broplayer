@@ -1,13 +1,8 @@
-<script>
-    window.Polymer = window.Polymer || {};
-    window.Polymer.dom = 'shadow';
-</script>
-<link rel="import" href="../polymer/polymer.html">
-<link rel="import" href="../paper-slider/paper-slider.html">
+<link rel="import" href="bower_components/polymer/polymer-element.html">
+<link rel="import" href="bower_components/paper-slider/paper-slider.html">
 
 
-<dom-module name="bro-player">
-
+<dom-module id="bro-player">
     <template>
         <style>
             :host {
@@ -31,7 +26,6 @@
                 background: var(--background-color);
                 box-sizing: border-box;
                 height: 60px;
-                float: left;
                 font-family: Arial, sans-serif;
                 position: absolute;
                 padding: 0;
@@ -39,7 +33,7 @@
                 width: 100%;
                 left: 0;
                 right: 0;
-                opacity: 1;
+                opacity: 0;
                 box-shadow: 0 0 10px rgba(0,0,0,0.3);
                 -webkit-transition: opacity 0.3s ease-in;
                 transition: opacity 0.3s ease-in;
@@ -265,17 +259,71 @@
                 position: relative;
                 margin: 5px auto;
             }
+            :host .bro-player-title {
+                width: 100%;
+                padding: 15px;
+                color: var(--title-foreground-color);
+                box-sizing: border-box;
+                font-family: Arial, sans-serif;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                opacity: 0;
+                -webkit-transition: opacity 0.3s ease-in;
+                transition: opacity 0.3s ease-in;
+                z-index: 5;
+                display: none;
+                background: -moz-linear-gradient(top, var(--title-background-color) 0%, var(--title-background-color-opacity-0) 100%); /* FF3.6-15 */
+                background: -webkit-linear-gradient(top, var(--title-background-color) 0%,var(--title-background-color-opacity-0) 100%); /* Chrome10-25,Safari5.1-6 */
+                background: linear-gradient(to bottom, var(--title-background-color) 0%,var(--title-background-color-opacity-0) 100%); /* W3C, IE10+, FF16+, Chrome26+, Opera12+, Safari7+ */
+            }
+            :host .bro-player-bigbutton {
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                width: 100%;
+                background: rgba(0,0,0,0.5);
+                z-index: 4;
+                cursor: pointer;
+                display: none;
+            }
+            :host .bro-player-bigbutton .bro-player-play-button {
+                color: #FFF;
+                position: absolute;
+                left: calc(50% - calc(50px / 2));
+                top: calc(50% - calc(55px / 2));
+                font-size: 50px;
+                height: 55px;
+                width: 50px;
+            }
+            :host .bro-player-bigbutton:hover .bro-player-play-button {
+                text-shadow: 0 0 5px var(--foreground-color);
+            }
+            :host .hidden {
+                display: none;
+            }
+            :host .opacity-100 {
+                opacity: 1;
+            }
 
 
         </style>
         <div class="bro-player-container">
             <video id="bro-player-video">
             </video>
-            <content></content>
+            <slot></slot>
             <ul class="bro-player-errors">
 
             </ul>
-            <div class="bro-player-controls">
+            <div class="bro-player-title opacity-100"></div>
+            <div class="bro-player-bigbutton">
+                <div class="bro-player-play-button">&#9658;</div>
+            </div>
+            <div class="bro-player-controls opacity-100">
                 <div class="bro-player-progress">
                     <paper-slider class="bro-player-progress-bar" secondary-progress="0"></paper-slider>
                 </div>
@@ -307,462 +355,534 @@
     </template>
 
     <script>
-        // element registration
-        Polymer({
-            is: "bro-player",
-            properties: {
-                src: {
-                    type: String,
-                    value: ""
-                },
-                height: {
-                    type: String,
-                    value: "auto"
-                },
-                width: {
-                    type: String,
-                    value: "100%"
-                },
-                autoplay: {
-                    type: Boolean,
-                    value: false
-                },
-                loop: {
-                    type: Boolean,
-                    value: false
-                },
-                backgroundColor: {
-                    type: String,
-                    value: "000000"
-                },
-                backgroundOpacity: {
-                    type: String,
-                    value: "0.7"
-                },
-                foregroundColor: {
-                    type: String,
-                    value: "FFFFFF"
-                },
-                progressColor: {
-                    type: String,
-                    value: "#3367d6"
-                },
-                bufferColor: {
-                    type: String,
-                    value: "#7baaf7"
-                },
-                hidePlaypause: {
-                    type: Boolean,
-                    value: false
-                },
-                hideProgressbar: {
-                    type: Boolean,
-                    value: false
-                },
-                hideVolume: {
-                    type: Boolean,
-                    value: false
-                },
-                hideMute: {
-                    type: Boolean,
-                    value: false
-                },
-                hideTime: {
-                    type: Boolean,
-                    value: false
-                },
-                hideFullscreen: {
-                    type: Boolean,
-                    value: false
-                },
-                allowContextmenu: {
-                    type: Boolean,
-                    value: false
-                },
-                noVideo: {
-                    type: String,
-                    value: "Cannot open source"
-                }
-            },
-            variables: {
-                    storevol: 0,
-                    playing: false,
-                    begin: false
-            },
-            convertHex: function convertHex(hex,opacity){
+        (function( global ) {
 
-                hex = hex.replace("#","");
+            var BroLib = function(elem){
+                return new BroLib.init(elem);
+            }
 
-                if(hex.length == 3){
-                    hex = hex+""+hex;
-                }
-                else if(hex.length == 6){}
-                else {
-                    return "(0,0,0,"+opacity+")";
-                }
+            var version = "0.0.1";
 
-                r = parseInt(hex.substring(0,2), 16);
-                g = parseInt(hex.substring(2,4), 16);
-                b = parseInt(hex.substring(4,6), 16);
+            var rnotwhite = ( /\S+/g ),
+                rclass = /[\t\r\n\f]/g;
 
-                result = 'rgba('+r+','+g+','+b+','+opacity+')';
-                return result;
-            },
-            convertDimensions: function convertDimensions(hash){
-                var value = "";
-                if(hash.substr(hash.length-1) == "%"){
-                    value = parseInt(hash.substr(0,hash.length-1))+"%";
-                }
-                else if(hash == "auto"){
-                    value = "auto";
-                }
-                else {
-                    value = parseInt(hash)+"px";
-                }
-                return value;
-            },
-            volumeChange: function(vol) {
-                var proto = this;
+            BroLib.prototype = {
+                addClass: function(value) {
+                    var classes, cur, curValue, clazz, j, finalValue;
 
-                proto.video.volume = vol/1000;
-                if(proto.video.volume == 0){
-                    $(proto.controls.muteButton).removeClass("bro-player-volume-icon-on");
-                }
-                else {
-                    $(proto.controls.muteButton).addClass("bro-player-volume-icon-on");
-                }
-            },
-            playPause: function(){
-                var proto = this;
-                if (proto.video.currentTime > 0 && proto.video.paused == false && proto.video.ended == false) {
-                    proto.variables.playing = false;
-                } else {
-                    proto.variables.playing = true;
-                }
+                    if ( typeof value === "string" && value ) {
+                        classes = value.match( rnotwhite ) || [];
 
-                if (proto.variables.playing == false) {
-                    proto.video.pause();
-                    $(proto.controls.playButton).addClass('bro-player-play').removeClass('bro-player-pause');
-                } else {
-                    proto.variables.begin = true;
-                    proto.video.play();
-                    $(proto.controls.playButton).addClass('bro-player-pause').removeClass('bro-player-play');
-                }
-            },
-            bufferLength: function() {
-                var proto = this;
+                        curValue = this.elem.getAttribute("class");
+                        cur = this.elem.nodeType === 1 &&
+                            ( " " + curValue + " " ).replace( rclass, " " );
 
-                if(!proto.hideProgressbar) {
-                    var buffered = proto.video.buffered;
-
-                    if (buffered.length > 0) {
-
-                        var i = buffered.length;
-
-                        var maxBuffer = 0;
-
-                        while (i--) {
-
-                            if (buffered.start(i) <= proto.video.currentTime) {
-                                if (buffered.end(i) > maxBuffer) {
-                                    maxBuffer = buffered.end(i);
+                        if ( cur ) {
+                            j = 0;
+                            while ( ( clazz = classes[ j++ ] ) ) {
+                                if ( cur.indexOf( " " + clazz + " " ) < 0 ) {
+                                    cur += clazz + " ";
                                 }
                             }
+
+                            finalValue = cur.trim();
+                            if ( curValue !== finalValue ) {
+                                this.elem.setAttribute("class", finalValue );
+                            }
                         }
-                        proto.controls.progress.secondaryProgress = maxBuffer;
                     }
-                }
-            },
-            isFullScreen: function(){
-                return (document.webkitIsFullScreen || document.mozFullScreen || document.fullScreen || document.msFullScreen);
-            },
-            updateTime: function(){
-                var proto = this;
-                var duration = proto.video.duration;
-                var currentTime = proto.video.currentTime;
+                    
+                    return this;
+                },
+                removeClass: function(value) {
+                    var classes, cur, curValue, clazz, j, finalValue;
 
-                var seconds = 0,
-                        minutes = Math.floor(currentTime / 60),
-                        tminutes = Math.floor(duration / 60),
-                        tseconds = Math.round((duration) - (tminutes*60));
+                    if ( typeof value === "string" && value ) {
+                        classes = value.match( rnotwhite ) || [];
+                        curValue = this.elem.getAttribute("class");
 
-                if(currentTime) {
-                    seconds = Math.round(currentTime) - (60*minutes);
-                    if(seconds > 59) {
+                        cur = this.elem.nodeType === 1 &&
+                            ( " " + curValue + " " ).replace( rclass, " " );
+
+                        if ( cur ) {
+                            j = 0;
+                            while ( ( clazz = classes[ j++ ] ) ) {
+
+                                while ( cur.indexOf( " " + clazz + " " ) > -1 ) {
+                                    cur = cur.replace( " " + clazz + " ", " " );
+                                }
+                            }
+
+                            finalValue = cur.trim();
+                            if ( curValue !== finalValue ) {
+                                this.elem.setAttribute("class", finalValue );
+                            }
+                        }
+                        
+                    }
+
+                    return this;
+                },
+                renderTime: function(currentTime, duration){
+
+                    var seconds = 0,
+                            minutes = Math.floor(currentTime / 60),
+                            tminutes = Math.floor(duration / 60),
+                            tseconds = Math.round((duration) - (tminutes*60));
+
+                    if(currentTime) {
                         seconds = Math.round(currentTime) - (60*minutes);
-                        if(seconds == 60) {
-                            minutes = Math.round(currentTime / 60);
-                            seconds = 0;
+                        if(seconds > 59) {
+                            seconds = Math.round(currentTime) - (60*minutes);
+                            if(seconds == 60) {
+                                minutes = Math.round(currentTime / 60);
+                                seconds = 0;
+                            }
+                        }
+                    }
+                    if(seconds < 10) { seconds = '0'+seconds; }
+                    if(tseconds < 10) { tseconds = '0'+tseconds; }
+
+                    return {
+                        "minutes": minutes,
+                        "tminutes": tminutes,
+                        "seconds": seconds,
+                        "tseconds": tseconds
+                    };
+                },
+                isFullScreen: function(){
+                    return (document.webkitIsFullScreen || document.mozFullScreen || document.fullScreen || document.msFullScreen);
+                },
+                convertHex: function(hex,opacity){
+
+                    var r,g,b,result;
+
+                    hex = hex.replace("#","");
+
+                    if(hex.length == 3){
+                        hex = hex+""+hex;
+                    }
+                    else if(hex.length == 6){}
+                    else {
+                        return "(0,0,0,"+opacity+")";
+                    }
+
+                    r = parseInt(hex.substring(0,2), 16);
+                    g = parseInt(hex.substring(2,4), 16);
+                    b = parseInt(hex.substring(4,6), 16);
+
+                    result = 'rgba('+r+','+g+','+b+','+opacity+')';
+                    return result;
+                },
+                convertDimensions: function(hash){
+                    var value = "";
+                    if(hash.substr(hash.length-1) == "%"){
+                        value = parseInt(hash.substr(0,hash.length-1))+"%";
+                    }
+                    else if(hash == "auto"){
+                        value = "auto";
+                    }
+                    else {
+                        value = parseInt(hash)+"px";
+                    }
+                    return value;
+                },
+                stripTags: function(str){
+                    return str.replace(/(<([^>]+)>)/ig,"");
+                }
+            };
+
+            BroLib.init = function(elem){
+                this.elem = elem;
+            }
+
+            BroLib.version = version;
+
+            BroLib.init.prototype = BroLib.prototype;
+
+            if(global.BroLib !== undefined){
+				if(global.BroLib.version !== undefined) {
+					if(global.BroLib.version < BroLib.version){
+						global.BroLib = BroLib;
+					}
+				}
+				else {
+					global.BroLib = BroLib;
+				}
+            }
+			else {
+				global.BroLib = BroLib;
+			}
+
+
+        }(window));
+
+        // Extend Polymer.Element base class
+        class MyElement extends Polymer.Element {
+            static get is() { return 'bro-player'; }
+            static get config() {
+                return { 
+                    properties: {
+                        src: {
+                            type: String,
+                            value: ""
+                        },
+                        title: {
+                            type: String,
+                            value: ""
+                        },
+                        height: {
+                            type: String,
+                            value: "auto"
+                        },
+                        width: {
+                            type: String,
+                            value: "100%"
+                        },
+                        autoplay: {
+                            type: Boolean,
+                            value: false
+                        },
+                        loop: {
+                            type: Boolean,
+                            value: false
+                        },
+                        titleBackgroundColor: {
+                            type: String,
+                            value: "000000"
+                        },
+                        titleForegroundColor: {
+                            type: String,
+                            value: "FFFFFF"
+                        },
+                        backgroundColor: {
+                            type: String,
+                            value: "000000"
+                        },
+                        backgroundOpacity: {
+                            type: String,
+                            value: "0.7"
+                        },
+                        foregroundColor: {
+                            type: String,
+                            value: "FFFFFF"
+                        },
+                        progressColor: {
+                            type: String,
+                            value: "#3367d6"
+                        },
+                        bufferColor: {
+                            type: String,
+                            value: "#7baaf7"
+                        },
+                        hidePlaypause: {
+                            type: Boolean,
+                            value: false
+                        },
+                        hideProgressbar: {
+                            type: Boolean,
+                            value: false
+                        },
+                        hideVolume: {
+                            type: Boolean,
+                            value: false
+                        },
+                        hideMute: {
+                            type: Boolean,
+                            value: false
+                        },
+                        hideTime: {
+                            type: Boolean,
+                            value: false
+                        },
+                        hideFullscreen: {
+                            type: Boolean,
+                            value: false
+                        },
+                        allowContextmenu: {
+                            type: Boolean,
+                            value: false
+                        },
+                        noVideo: {
+                            type: String,
+                            value: "Cannot open source"
                         }
                     }
                 }
-                if(seconds < 10) { seconds = '0'+seconds; }
-                if(tseconds < 10) { tseconds = '0'+tseconds; }
-
-                if(!proto.hideTime) {
-                    $(proto.player).find('.bro-player-ctime').html(minutes + ':' + seconds);
-                    $(proto.player).find('.bro-player-ttime').html(tminutes + ':' + tseconds);
-                }
-            },
-            addError: function(src){
-                var li = $("<li></li>");
-                li.text(this.noVideo+": "+src);
-                $(this.errors).append(li);
-            },
-            attached: function() {
+            }
+            constructor() {
+                super();
+            }
+            connectedCallback() {
+                super.connectedCallback();
                 this.initVariables();
                 this.initSources();
                 this.initProperties();
                 this.initSections();
                 this.initControls();
-            },
-            initVariables: function(){
-                this.player = Polymer.dom(this.root).querySelector(".bro-player-container");
-                this.video = Polymer.dom(this.root).querySelector("#bro-player-video");
-                this.errors = Polymer.dom(this.root).querySelector(".bro-player-errors");
-                this.controls = {};
-                this.controls.container = Polymer.dom(this.root).querySelector(".bro-player-controls");
-                this.controls.playButton = Polymer.dom(this.root).querySelector(".bro-player-controls .bro-player-play-pause");
-                this.controls.progress = Polymer.dom(this.root).querySelector(".bro-player-controls .bro-player-progress .bro-player-progress-bar");
-                this.controls.volume = Polymer.dom(this.root).querySelector(".bro-player-controls .bro-player-volume .bro-player-volume-bar");
-                this.controls.muteButton = Polymer.dom(this.root).querySelector(".bro-player-controls .bro-player-volume-icon");
-                this.controls.fullscreenButton = Polymer.dom(this.root).querySelector(".bro-player-controls .bro-player-fullscreen a");
-                this.variables.volume = this.video.volume;
+            }
+            initVariables(){
+                this.dom = {};
+                this.dom.player = this.shadowRoot.querySelector(".bro-player-container");
+                this.dom.video = this.shadowRoot.querySelector("#bro-player-video");
+                this.dom.errors = this.shadowRoot.querySelector(".bro-player-errors");
+                this.dom.title = this.shadowRoot.querySelector(".bro-player-title");
+
+                this.dom.controls = {};
+                this.dom.controls.container = this.shadowRoot.querySelector(".bro-player-controls");
+                this.dom.controls.playButton = this.shadowRoot.querySelector(".bro-player-controls .bro-player-play-pause");
+                this.dom.controls.progress = this.shadowRoot.querySelector(".bro-player-controls .bro-player-progress .bro-player-progress-bar");
+                this.dom.controls.volume = this.shadowRoot.querySelector(".bro-player-controls .bro-player-volume .bro-player-volume-bar");
+                this.dom.controls.muteButton = this.shadowRoot.querySelector(".bro-player-controls .bro-player-volume-icon");
+                this.dom.controls.fullscreenButton = this.shadowRoot.querySelector(".bro-player-controls .bro-player-fullscreen a");
+                this.dom.controls.bigButton = this.shadowRoot.querySelector(".bro-player-bigbutton");
+
+                this.variables = {};
+                this.variables.volume = this.dom.video.volume;
                 this.variables.currentTime = 0;
                 this.variables.progWidth = 0;
+                this.variables.init = false;
 
-            },
-            initSources: function(){
-                var proto = this;
-
-                // Shadow Dom
-                if(proto.shadowRoot != null) {
-                    var content = proto.shadowRoot.querySelector('content').getDistributedNodes();
-                    for (var i = 0; i < content.length; i++) {
-                        if ($(content[i]).is("source")) {
-                            $(proto.video).append($(content[i]).clone());
-                        }
+            }
+            initSources(){
+                var content = this.shadowRoot.querySelector('slot').assignedNodes();
+                for (var i = 0; i < content.length; i++) {
+                    if (content[i].tagName === "SOURCE") {
+                        this.dom.video.appendChild(content[i]);
                     }
-                } // Shady Dom
-                else {
-                    var content = $(proto.player).find("source");
-                    content.each(function(){
-                        $(proto.video).append(this);
-                    });
                 }
-            },
-            initProperties: function(){
+            }
+            initProperties(){
                 if(this.src.length > 0){
-                    $(this.video).attr("src",this.src);
+                    this.dom.video.setAttribute("src",BroLib().stripTags(this.src));
                 }
 
-                var width = this.convertDimensions(this.width);
-                var height = this.convertDimensions(this.height);
+                if(this.title.length > 0){
+                    this.dom.title.innerHTML = BroLib().stripTags(this.title);
+                }
+
+                var width = BroLib().convertDimensions(this.width);
+                var height = BroLib().convertDimensions(this.height);
                 this.style.width = width;
                 this.style.height = height;
-                $(this.video).attr("width",width);
-                $(this.video).attr("height",height);
+                this.dom.video.setAttribute("width",width);
+                this.dom.video.setAttribute("height",height);
 
 
 
-                this.video.autoplay = this.autoplay;
+                this.dom.video.autoplay = this.autoplay;
                 if(this.autoplay){
-                    $(this.controls.playButton).addClass('bro-player-pause').removeClass('bro-player-play');
+                    BroLib(this.dom.controls.playButton).addClass('bro-player-pause').removeClass('bro-player-play');
                 }
-                this.video.loop = this.loop;
+                this.dom.video.loop = this.loop;
+
+                var titleBackgroundColor = BroLib().convertHex(this.titleBackgroundColor,1);
+                this.updateStyles({'--title-background-color': titleBackgroundColor});
+
+                var titleBackgroundColorOpacity0 = BroLib().convertHex(this.titleBackgroundColor,0);
+                this.updateStyles({'--title-background-color-opacity-0': titleBackgroundColorOpacity0});
+
+                var titleForegroundColor = BroLib().convertHex(this.titleForegroundColor,1);
+                this.updateStyles({'--title-foreground-color': titleForegroundColor});
 
                 var backgroundOpacity = parseFloat(this.backgroundOpacity);
-                if(backgroundOpacity > 1){
-                    backgroundOpacity = 1;
-                }
-                else if(backgroundOpacity < 0){
-                    backgroundOpacity = 0;
-                }
+                if(backgroundOpacity > 1) { backgroundOpacity = 1; }
+                else if(backgroundOpacity < 0) { backgroundOpacity = 0; }
 
-                var backgroundColor = this.convertHex(this.backgroundColor,backgroundOpacity);
-                this.customStyle["--background-color"] = backgroundColor;
+                var backgroundColor = BroLib().convertHex(this.backgroundColor,backgroundOpacity);
+                this.updateStyles({'--background-color': backgroundColor});
 
-                var foregroundColor = this.convertHex(this.foregroundColor,1);
-                this.customStyle["--foreground-color"] = foregroundColor;
+                var foregroundColor = BroLib().convertHex(this.foregroundColor,1);
+                this.updateStyles({'--foreground-color': foregroundColor});
 
-                var progressColor = this.convertHex(this.progressColor,1);
-                this.customStyle["--paper-slider-active-color"] = progressColor;
-                this.customStyle["--paper-slider-knob-color"] = progressColor;
+                var progressColor = BroLib().convertHex(this.progressColor,1);
+                this.updateStyles({'--paper-slider-active-color': progressColor});
+                this.updateStyles({'--paper-slider-knob-color': progressColor});
 
-                var bufferColor = this.convertHex(this.bufferColor,1);
-                this.customStyle["--paper-slider-secondary-color"] = bufferColor;
-
-                this.updateStyles();
-            },
-            initSections: function(){
+                var bufferColor = BroLib().convertHex(this.bufferColor,1);
+                this.updateStyles({'--paper-slider-secondary-color': bufferColor});
+            }
+            initSections(){
                 if(this.hidePlaypause){
-                    this.customStyle["--display-playpause"] = "none";
+                    this.updateStyles({'--display-playpause': "none"});
                 }
 
                 if(this.hideProgressbar){
-                    this.customStyle["--display-progress"] = "none";
-                    $(this.controls.container).addClass("progressbar-hidden");
+                    this.updateStyles({'--display-progress': "none"});
+                    BroLib(this.dom.controls.container).addClass("progressbar-hidden");
                 }
 
                 if(this.hideVolume){
-                    this.customStyle["--display-volume"] = "none";
+                    this.updateStyles({'--display-volume': "none"});
                 }2
 
                 if(this.hideMute){
-                    this.customStyle["--display-mute"] = "none";
+                    this.updateStyles({'--display-mute': "none"});
                 }
 
                 if(this.hideTime){
-                    this.customStyle["--display-time"] = "none";
+                    this.updateStyles({'--display-time': "none"});
                 }
 
                 if(this.hideFullscreen){
-                    this.customStyle["--display-fullscreen"] = "none";
+                    this.updateStyles({'--display-fullscreen': "none"});
                 }
-
-                this.updateStyles();
-            },
-            initControls: function() {
-                var proto = this;
-
-                // Set Duration to Video Progress Bar
-                if(!proto.hideProgressbar) {
-                    proto.video.addEventListener('canplay', function () {
-                        proto.controls.progress.max = proto.video.duration;
-                        proto.controls.volume.value = proto.video.volume * 1000;
-                    });
-                }
+            }
+            initControls() {
+                var self = this;
 
                 // enable <video> if working source is available
-                $(proto.video).on('canplay', function () {
-                    proto.video.style.display = "block";
-                    proto.errors.style.display = "none";
-                    proto.controls.container.style.display = "block";
-                    proto.updateTime();
+                self.dom.video.addEventListener('canplay', function (e) {
+                    if(!self.hideProgressbar) {
+                        self.dom.controls.progress.max = self.dom.video.duration;
+                        self.dom.controls.volume.value = self.dom.video.volume * 1000;
+                    }
+
+                    if(!self.init){
+                        self.dom.video.style.display = "block";
+                        self.dom.errors.style.display = "none";
+                        self.dom.title.style.display = "block";
+                        self.dom.controls.bigButton.style.display = "block";
+                        self.init = true;
+                    }
+                    self.updateTime();
                 });
 
-                $(proto.video).on('error',function(){
-                    proto.addError(this.src);
+                self.dom.controls.bigButton.addEventListener('click', function(e){
+                    self.dom.controls.bigButton.style.display = "none";
+                    self.dom.controls.container.style.display = "block";
+                    self.playPause();
                 });
-                $(proto.video).find("source").on('error',function(){
-                    proto.addError(this.src);
+
+                self.dom.video.addEventListener('error',function(e){
+                    self.addError(this.src);
+                });
+                
+                self.dom.video.querySelectorAll("source").forEach(function(source){
+                    source.addEventListener('error',function(){
+                        self.addError(this.src);
+                    });
                 });
 
                 // Hide Controls on mouse out
-                $('body, html').bind('mousemove', function(e) {
-                    if(proto.isFullScreen()){
-                        $(proto.controls.container).hover(function () {
-                            $(proto.controls.container).stop(true, false).velocity({'opacity': '1'}, 0.5);
-                        }, function () {
-                            $(proto.controls.container).stop(true, false).velocity({'opacity': '0'}, 3);
-                        });
-                    }
-                    else {
-                        $(proto.player).hover(function () {
-                            if (proto.video.currentTime > 0 && proto.video.paused == false && proto.video.ended == false) {
-                                $(proto.controls.container).stop(true, false).velocity({'opacity': '1'}, 0.5);
-                            }
-                        }, function () {
-                            if (proto.video.currentTime > 0 && proto.video.paused == false && proto.video.ended == false) {
-                                $(proto.controls.container).stop(true, false).velocity({'opacity': '0'}, 0.5);
-                            }
-                        });
-                    }
+                document.querySelectorAll("body, html").forEach(function(elem){
+                    elem.addEventListener('mousemove',function(e){
+                        if(BroLib().isFullScreen()){
+                            self.dom.controls.container.addEventListener('mouseenter',function(e){
+                                self.showHide(true);
+                            });
+                            self.dom.controls.container.addEventListener('mouseleave',function(e){
+                                self.showHide(false);
+                            });
+                        }
+                        else {
+                            self.dom.player.addEventListener('mouseenter',function(e){
+                                if (self.dom.video.currentTime > 0 && self.dom.video.paused == false && self.dom.video.ended == false) {
+                                    self.showHide(true);
+                                }
+                            });
+                            self.dom.player.addEventListener('mouseleave',function(e){
+                                if (self.dom.video.currentTime > 0 && self.dom.video.paused == false && self.dom.video.ended == false) {
+                                    self.showHide(false);
+                                }
+                            });
+                        }
+                    });
                 });
 
 
 
                 // Update Video Progress Bar and Time
-                proto.video.addEventListener('timeupdate', function(){
+                self.dom.video.addEventListener('timeupdate', function(e){
 
-                    if(!proto.hideProgressbar) {
-                        proto.controls.progress.value = proto.video.currentTime;
+                    if(!self.hideProgressbar) {
+                        self.dom.controls.progress.value = self.dom.video.currentTime;
                     }
 
-                    proto.updateTime();
+                    self.updateTime();
 
-                    if(proto.video.currentTime > 0 && proto.video.paused == false && proto.video.ended == false) {
-                        proto.bufferLength();
+                    if(self.dom.video.currentTime > 0 && self.dom.video.paused == false && self.dom.video.ended == false) {
+                        self.bufferLength();
                     }
                 });
 
                 // Update Time on Progress Bar Click
 
-                if(!proto.hideProgressbar) {
-                    proto.controls.progress.addEventListener("change", function () {
-                        proto.video.currentTime = this.value;
+                if(!self.hideProgressbar) {
+                    self.dom.controls.progress.addEventListener("change", function () {
+                        self.dom.video.currentTime = this.value;
                     });
                 }
 
 
                 // Update Volume on Progress Bar Click
-                if(!proto.hideVolume) {
-                    proto.controls.volume.addEventListener("change", function () {
-                        proto.volumeChange(this.value);
+                if(!self.hideVolume) {
+                    self.dom.controls.volume.addEventListener("change", function () {
+                        self.volumeChange(this.value);
                     });
-                    proto.controls.volume.addEventListener("immediate-value-change", function () {
-                        proto.volumeChange(this.immediateValue);
+                    self.dom.controls.volume.addEventListener("immediate-value-change", function () {
+                        self.volumeChange(this.immediateValue);
                     });
                 }
 
                 // Toggle Mutebutton
-                if(!proto.hideMute) {
-                    proto.controls.muteButton.addEventListener("click", function () {
-                        if (proto.video.volume > 0) {
-                            proto.variables.storevol = proto.video.volume;
-                            proto.video.volume = 0;
-                            proto.controls.volume.value = 0;
-                            $(proto.controls.muteButton).removeClass("bro-player-volume-icon-on");
+                if(!self.hideMute) {
+                    self.dom.controls.muteButton.addEventListener("click", function () {
+                        if (self.dom.video.volume > 0) {
+                            self.variables.storevol = self.dom.video.volume;
+                            self.dom.video.volume = 0;
+                            self.dom.controls.volume.value = 0;
+                            BroLib(self.dom.controls.muteButton).removeClass("bro-player-volume-icon-on");
                         }
                         else {
-                            if (proto.variables.storevol == 0) {
-                                proto.variables.storevol = 1;
+                            if (self.variables.storevol == 0) {
+                                self.variables.storevol = 1;
                             }
-                            proto.video.volume = proto.variables.storevol;
-                            proto.controls.volume.value = proto.variables.storevol * 1000;
-                            $(proto.controls.muteButton).addClass("bro-player-volume-icon-on");
+                            self.dom.video.volume = self.variables.storevol;
+                            self.dom.controls.volume.value = self.variables.storevol * 1000;
+                            BroLib(self.dom.controls.muteButton).addClass("bro-player-volume-icon-on");
                         }
                     });
                 }
 
                 // Toggle PlayButton when clicked on PlayButton
-                if(!proto.hidePlaypause) {
-                    proto.controls.playButton.addEventListener("click", function () {
-                        proto.playPause();
+                if(!self.hidePlaypause) {
+                    self.dom.controls.playButton.addEventListener("click", function () {
+                        self.playPause();
                     });
                 }
 
                 // Toggle Playbutton when clicked on video
-                proto.video.addEventListener("click", function () {
-                    proto.playPause();
+                self.dom.video.addEventListener("click", function () {
+                    self.playPause();
                 });
 
                 // Check if fullscreen supported.
-                if(!proto.video.requestFullscreen && !proto.video.mozRequestFullScreen && !proto.video.webkitRequestFullScreen && !proto.video.msRequestFullScreen) {
-                    $(proto.controls.fullscreenButton).hide();
+                if(!self.dom.video.requestFullscreen && !self.dom.video.mozRequestFullScreen && !self.dom.video.webkitRequestFullScreen && !self.dom.video.msRequestFullScreen) {
+                    BroLib(self.dom.controls.fullscreenButton).addClass("hidden");
                 }
 
                 // Toogle FullscreenButton
-                if(!proto.hideFullscreen) {
-                    proto.controls.fullscreenButton.addEventListener("click", function () {
+                if(!self.hideFullscreen) {
+                    self.dom.controls.fullscreenButton.addEventListener("click", function () {
 
-                        if (!proto.isFullScreen()) {
-                            if (proto.video.requestFullscreen) {
-                                proto.video.requestFullscreen();
+                        if (!BroLib().isFullScreen()) {
+                            if (self.dom.video.requestFullscreen) {
+                                self.dom.video.requestFullscreen();
                             }
 
-                            else if (proto.video.mozRequestFullScreen) {
-                                proto.video.mozRequestFullScreen();
+                            else if (self.dom.video.mozRequestFullScreen) {
+                                self.dom.video.mozRequestFullScreen();
                             }
 
-                            else if (proto.video.webkitRequestFullScreen) {
-                                proto.video.webkitRequestFullScreen();
+                            else if (self.dom.video.webkitRequestFullScreen) {
+                                self.dom.video.webkitRequestFullScreen();
                             }
 
-                            else if (proto.video.msRequestFullScreen) {
-                                proto.video.msRequestFullScreen();
+                            else if (self.dom.video.msRequestFullScreen) {
+                                self.dom.video.msRequestFullScreen();
                             }
-                            $(proto.controls.container).addClass("bro-player-controls-fullscreen")
+                            BroLib(self.dom.controls.container).addClass("bro-player-controls-fullscreen");
                         }
                         else {
                             if (document.cancelFullScreen) {
@@ -780,31 +900,115 @@
                             else if (document.msCancelFullScreen) {
                                 document.msCancelFullScreen();
                             }
-                            $(proto.controls.container).removeClass("bro-player-controls-fullscreen");
+                            BroLib(self.dom.controls.container).removeClass("bro-player-controls-fullscreen");
                         }
                     });
                 }
 
-                proto.video.addEventListener('ended', function() {
+                self.dom.video.addEventListener('ended', function() {
 
-                    proto.variables.playing = false;
-                    proto.video.currentTime = 0;
-                    $(proto.controls.playButton).addClass('bro-player-play').removeClass('bro-player-pause');
-                    if ($(proto.controls.container).css("opacity") == 0) {
-                        $(proto.controls.container).stop(true, false).animate({'opacity': '1'}, 0.5);
+                    self.variables.playing = false;
+                    self.dom.video.currentTime = 0;
+                    BroLib(self.dom.controls.playButton).addClass("bro-player-play").removeClass('bro-player-pause');
+                    if (self.dom.controls.container.style.opacity === 0) {
+                        BroLib(self.dom.controls.container).addClass("opacity-100");
                     }
 
                 });
 
                 // Prevent Context Menu
-                if(!proto.allowContextmenu) {
-                    $(proto.video).bind('contextmenu', function () {
+                if(!self.allowContextmenu) {
+                    self.dom.video.addEventListener('contextmenu', function (e) {
+                        e.preventDefault();
                         return false;
                     });
                 }
 
             }
-        });
+            showHide(show){
+                if(show){
+                    BroLib(this.dom.controls.container).addClass("opacity-100");
+                    BroLib(this.dom.title).addClass("opacity-100");
+                }
+                else {
+                    BroLib(this.dom.controls.container).removeClass("opacity-100");
+                    BroLib(this.dom.title).removeClass("opacity-100");
+                }
+            }
+            volumeChange(vol) {
+                var self = this;
+
+                self.dom.video.volume = vol/1000;
+                if(self.dom.video.volume == 0){
+                    self.removeClass(self.dom.controls.muteButton, "bro-player-volume-icon-on");
+                }
+                else {
+                    BroLib(self.dom.controls.muteButton).addClass("bro-player-volume-icon-on");
+                }
+            }
+            playPause(){
+                var self = this;
+                if (self.dom.video.currentTime > 0 && self.dom.video.paused == false && self.dom.video.ended == false) {
+                    self.variables.playing = false;
+                } else {
+                    self.variables.playing = true;
+                }
+
+                if (self.variables.playing == false) {
+                    self.dom.video.pause();
+                    BroLib(self.dom.controls.playButton).addClass("bro-player-play").removeClass('bro-player-pause');
+                } else {
+                    self.variables.begin = true;
+                    self.dom.video.play();
+                    BroLib(self.dom.controls.playButton).addClass("bro-player-pause").removeClass('bro-player-play');
+                }
+            }
+            bufferLength() {
+                var self = this;
+
+                if(!self.hideProgressbar) {
+                    var buffered = self.dom.video.buffered;
+
+                    if (buffered.length > 0) {
+
+                        var i = buffered.length;
+
+                        var maxBuffer = 0;
+
+                        while (i--) {
+
+                            if (buffered.start(i) <= self.dom.video.currentTime) {
+                                if (buffered.end(i) > maxBuffer) {
+                                    maxBuffer = buffered.end(i);
+                                }
+                            }
+                        }
+                        self.dom.controls.progress.secondaryProgress = maxBuffer;
+                    }
+                }
+            }
+            updateTime(){
+                var self = this;
+
+                if(!self.hideTime) {
+                    var duration = self.dom.video.duration;
+                    var currentTime = self.dom.video.currentTime;
+
+                    var renderedTime = BroLib().renderTime(currentTime,duration);
+                
+                    self.dom.player.querySelector('.bro-player-ctime').innerHTML = renderedTime.minutes + ':' + renderedTime.seconds;
+                    self.dom.player.querySelector('.bro-player-ttime').innerHTML = renderedTime.tminutes + ':' + renderedTime.tseconds;
+                }
+            }
+            addError(src){
+                var li = document.createElement("LI");
+                li.innerHTML = this.noVideo+": "+src;
+                this.dom.errors.appendChild(li);
+            }
+        }
+
+        // Register custom element definition using standard platform API
+        customElements.define(MyElement.is, MyElement);
     </script>
 
 </dom-module>
